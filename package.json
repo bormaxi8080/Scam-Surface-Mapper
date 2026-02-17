@@ -1,0 +1,9 @@
+{
+  "name": "scam-surface-mapper",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build:pages": "node scripts/build-pages.mjs",
+    "test:smoke": "node tests/smoke.mjs"
+  }
+}

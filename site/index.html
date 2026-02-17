@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scam Surface Mapper Viewer</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-soft: #11172c;
+      --card: #131c33;
+      --line: #2a395f;
+      --text: #e8eefc;
+      --muted: #9fb0d6;
+      --accent: #68e0cf;
+      --danger: #ff7b7b;
+      --warning: #ffd166;
+      --ok: #7ddf95;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 680px at 10% -20%, #1b2a53 0%, transparent 58%),
+        radial-gradient(900px 520px at 90% -25%, #0b5448 0%, transparent 50%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(1280px, 96vw);
+      margin: 0 auto;
+      padding: 20px 0 28px;
+    }
+
+    .title {
+      margin: 0;
+      font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+      font-size: clamp(24px, 2.4vw, 34px);
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .cards {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: color-mix(in oklab, var(--card), black 8%);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+    }
+
+    .install-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .btn,
+    .btn-link {
+      border: 1px solid color-mix(in oklab, var(--line), white 10%);
+      color: var(--text);
+      background: #1a2646;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.12s ease, background 0.12s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover,
+    .btn-link:hover {
+      background: #21315a;
+      transform: translateY(-1px);
+    }
+
+    .btn:active,
+    .btn-link:active {
+      transform: translateY(0);
+    }
+
+    .btn.secondary {
+      background: #16203a;
+    }
+
+    textarea.code-box {
+      width: 100%;
+      min-height: 82px;
+      resize: vertical;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #0d1427;
+      color: #d9e7ff;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 12px;
+      padding: 9px;
+      line-height: 1.35;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .mono {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      word-break: break-word;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #101a30;
+      padding: 8px;
+    }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .flags {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .flag-chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 12px;
+      color: #c8d9ff;
+      background: #0f1730;
+    }
+
+    .status-line {
+      margin-top: 12px;
+      border: 1px solid color-mix(in oklab, var(--line), white 8%);
+      background: #10182f;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #cde0ff;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+    }
+
+    .tabs {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: #15203b;
+      color: #d8e5ff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: color-mix(in oklab, var(--accent), #10232a 76%);
+      border-color: color-mix(in oklab, var(--accent), black 42%);
+      color: #e4fff8;
+    }
+
+    .panel {
+      margin-top: 10px;
+      display: none;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #101a31;
+      overflow: hidden;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 66vh;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      background: #182646;
+      z-index: 1;
+    }
+
+    th,
+    td {
+      text-align: left;
+      border-bottom: 1px solid #26365c;
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    .panel-head {
+      padding: 10px 12px;
+      border-bottom: 1px solid #26365c;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .graph-wrap {
+      height: 70vh;
+      min-height: 420px;
+      position: relative;
+      background: #0b1122;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .ssm-context-menu {
+      position: fixed;
+      z-index: 99999;
+      min-width: 220px;
+      border-radius: 8px;
+      border: 1px solid #2b3d66;
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.38);
+      background: #121c36;
+      overflow: hidden;
+    }
+
+    .ssm-context-item {
+      width: 100%;
+      text-align: left;
+      padding: 9px 11px;
+      border: 0;
+      border-bottom: 1px solid #21345b;
+      background: #121c36;
+      color: #e2ebff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .ssm-context-item:last-child {
+      border-bottom: 0;
+    }
+
+    .ssm-context-item:hover {
+      background: #1a2a4f;
+    }
+
+    @media (max-width: 960px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .graph-wrap {
+        min-height: 360px;
+        height: 62vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1 class="title">Scam Surface Mapper Viewer</h1>
+    <p class="subtitle">
+      Hybrid mode: run collector bookmarklet on target page, then inspect data here.
+      If auto-transfer fails, import downloaded <span class="mono">snapshot.json</span>.
+    </p>
+
+    <section class="cards">
+      <article class="card">
+        <h2>Install Collector Bookmarklet</h2>
+        <div class="install-row">
+          <a id="bookmarklet-link" class="btn-link" href="#">Drag To Bookmarks</a>
+          <button id="bookmarklet-copy" class="btn secondary" type="button">Copy Code</button>
+        </div>
+        <textarea id="bookmarklet-code" class="code-box" readonly></textarea>
+        <p id="ssm-install-status" class="muted">Preparing bookmarklet...</p>
+      </article>
+
+      <article class="card">
+        <h2>Snapshot Stats</h2>
+        <div class="stats-grid">
+          <div class="stat"><strong>Source</strong><br /><span id="ssm-source" class="mono">-</span></div>
+          <div class="stat"><strong>Hosts</strong><br /><span id="ssm-hosts-count">0</span></div>
+          <div class="stat"><strong>Links</strong><br /><span id="ssm-links-count">0</span></div>
+          <div class="stat"><strong>Schema</strong><br /><span class="mono">1.0.0</span></div>
+        </div>
+
+        <div class="actions">
+          <button id="btn-copy-json" class="btn" type="button">Copy JSON</button>
+          <button id="btn-download-hosts" class="btn" type="button">Download hosts.csv</button>
+          <button id="btn-download-links" class="btn" type="button">Download links.csv</button>
+          <button id="btn-download-snapshot" class="btn" type="button">Download snapshot.json</button>
+          <button id="btn-save-graph" class="btn" type="button">Save graph.png</button>
+          <label class="btn" for="input-import-json">Import JSON</label>
+          <input id="input-import-json" type="file" accept="application/json" hidden />
+          <button id="btn-paste-json" class="btn" type="button">Paste JSON</button>
+        </div>
+
+        <div id="ssm-flags" class="flags"></div>
+      </article>
+    </section>
+
+    <div id="ssm-status" class="status-line">Viewer initialization...</div>
+
+    <section class="tabs">
+      <button class="tab active" type="button" data-tab="summary">Summary</button>
+      <button class="tab" type="button" data-tab="links">Raw Links</button>
+      <button class="tab" type="button" data-tab="hosts">Hosts Graph</button>
+      <button class="tab" type="button" data-tab="full">Full Graph</button>
+    </section>
+
+    <section class="panel active" data-panel="summary">
+      <div class="panel-head">
+        <strong>Hosts Summary</strong>
+        <span class="muted">Risk ordered by max suspicion score</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Host</th>
+              <th>Links</th>
+              <th>External</th>
+              <th>Risk</th>
+              <th>Flags</th>
+            </tr>
+          </thead>
+          <tbody id="ssm-summary-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="links">
+      <div class="panel-head">
+        <strong>Raw Links</strong>
+        <span id="ssm-links-note" class="muted">-</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>URL</th>
+              <th>Host</th>
+              <th>Risk</th>
+              <th>Tags</th>
+            </tr>
+          </thead>
+          <tbody id="ssm-links-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="hosts">
+      <div class="panel-head">
+        <strong>Hosts Graph</strong>
+        <span class="muted">Drag nodes. Right click for OSINT actions.</span>
+      </div>
+      <div class="graph-wrap">
+        <canvas id="ssm-canvas-hosts"></canvas>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="full">
+      <div class="panel-head">
+        <strong>Full Graph</strong>
+        <span class="muted">Root → Host → URL. URL nodes are capped for performance.</span>
+      </div>
+      <div class="graph-wrap">
+        <canvas id="ssm-canvas-full"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/viewer.js" defer></script>
+</body>
+</html>
